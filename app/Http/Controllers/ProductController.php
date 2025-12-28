@@ -71,5 +71,19 @@ class ProductController extends Controller
         return redirect('/products')->with('success', 'Barang berhasil dihapus');
     }
 
+    public function batchDelete(Request $request)
+{
+    $ids = $request->product_ids;
+
+    if (!$ids || count($ids) == 0) {
+        return redirect()->back()->with('error', 'Pilih produk yang ingin dihapus terlebih dahulu!');
+    }
+
+    // Hapus massal berdasarkan ID yang dipilih
+    Product::whereIn('id', $ids)->delete();
+
+    return redirect()->route('products.index')->with('success', count($ids) . ' produk berhasil dihapus.');
+}
+
     
 }
