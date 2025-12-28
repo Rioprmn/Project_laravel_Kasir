@@ -1,0 +1,142 @@
+/* public/css/product.css */
+
+/* Header & Stat Info */
+.product-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    animation: fadeIn 0.5s ease;
+}
+
+/* Pastikan form filter bisa menyesuaikan layar */
+@media (max-width: 768px) {
+    form {
+        grid-template-columns: 1fr !important; /* Jadi satu kolom jika di HP */
+    }
+    .product-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+}
+
+/* Avatar Inisial Produk */
+.product-avatar {
+    width: 45px;
+    height: 45px;
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    color: #10b981;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: 800;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* Status Stok Badge */
+.badge-stock {
+    padding: 6px 14px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.badge-stock.low {
+    background: #fff1f2;
+    color: #e11d48;
+    border: 1px solid #fecdd3;
+}
+
+.badge-stock.safe {
+    background: #f0fdf4;
+    color: #16a34a;
+    border: 1px solid #dcfce7;
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.dot-red { background: #e11d48; box-shadow: 0 0 8px #e11d48; }
+.dot-green { background: #16a34a; box-shadow: 0 0 8px #16a34a; }
+
+/* Action Buttons */
+.action-wrapper {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.btn-action {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    text-decoration: none;
+}
+
+.btn-action.edit:hover {
+    background: #10b981;
+    color: white !important;
+    transform: translateY(-3px) rotate(8deg);
+}
+
+.btn-action.delete:hover {
+    background: #f43f5e;
+    color: white !important;
+    transform: translateY(-3px) rotate(-8deg);
+}
+
+
+
+/* Badge Nomor Nota */
+.badge-trx {
+    background: #ecfdf5;
+    color: #059669;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    border: 1px solid #d1fae5;
+}
+
+/* Tombol Lihat Nota Modern */
+.btn-detail-modern {
+    background: white;
+    color: #059669;
+    border: 1px solid #059669;
+    padding: 8px 16px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.btn-detail-modern:hover {
+    background: #059669;
+    color: white;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
+    transform: translateY(-2px);
+}
+
+/* Responsif Table Container */
+.table-responsive {
+    overflow-x: auto;
+    border-radius: 15px;
+}

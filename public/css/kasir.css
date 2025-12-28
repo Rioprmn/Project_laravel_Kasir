@@ -1,0 +1,76 @@
+/* public/css/kasir.css */
+
+.kasir-container {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 20px;
+    align-items: start;
+}
+
+.card-kasir {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.table-custom {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.table-custom th {
+    text-align: left;
+    padding: 12px;
+    background: #f8fafc;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.table-custom td {
+    padding: 12px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.bayar-section {
+    margin-top: 20px;
+    padding: 20px;
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+}
+
+.input-bayar-style {
+    width: 100%;
+    padding: 15px;
+    font-size: 1.8rem;
+    border: 2px solid #2563eb;
+    border-radius: 8px;
+    font-weight: bold;
+    color: #1e293b;
+}
+
+.btn-checkout-final {
+    width: 100%;
+    background: #16a34a;
+    color: white;
+    padding: 18px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-checkout-final:hover { background: #15803d; }
+.btn-checkout-final:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-update {
+    background: #64748b;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}

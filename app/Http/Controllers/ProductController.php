@@ -8,13 +8,25 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Pastikan variabel ini bernama $products (dengan s)
-        $products = Product::with('category')->get();
-        return view('products.index', compact('products'));
+    $query = Product::with('category');
+
+    // Filter berdasarkan Nama Produk (Search)
+    if ($request->filled('search')) {
+        $query->where('name', 'like', '%' . $request->search . '%');
     }
 
+    // Filter berdasarkan Kategori
+    if ($request->filled('category_id')) {
+        $query->where('category_id', $request->category_id);
+    }
+
+    $products = $query->get();
+    $categories = Category::all();
+
+    return view('products.index', compact('products', 'categories'));
+    }
     public function create()
     {
         $categories = Category::all();
@@ -58,4 +70,6 @@ class ProductController extends Controller
         $product->delete();
         return redirect('/products')->with('success', 'Barang berhasil dihapus');
     }
+
+    
 }

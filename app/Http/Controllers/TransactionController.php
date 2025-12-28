@@ -14,46 +14,80 @@ class TransactionController extends Controller
     public function create()
     {
         $products = Product::all();
+        $totalCart = 0;
         return view('transactions.create', compact('products'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'qty' => 'required|integer|min:1'
-        ]);
+    // 1. Validasi input
+    $request->validate([
+        'bayar' => 'required|numeric|min:0',
+        'total' => 'required|numeric|min:0',
+    ]);
 
-        DB::transaction(function () use ($request) {
-            $product = Product::findOrFail($request->product_id);
-            $qty = $request->qty;
-            $subtotal = $product->price * $qty;
+    // 2. Ambil data keranjang
+    $cart = session()->get('cart');
 
+    if (!$cart || count($cart) == 0) {
+        return redirect()->back()->with('error', 'Keranjang masih kosong!');
+    }
+
+    // 3. Cek apakah uang cukup
+    if ($request->bayar < $request->total) {
+        return redirect()->back()->with('error', 'Uang bayar tidak cukup!');
+    }
+
+    try {
+        // 4. Proses Simpan dengan Database Transaction
+        DB::transaction(function () use ($request, $cart) {
+            
+            // Simpan Header Transaksi
             $transaction = Transaction::create([
                 'user_id' => Auth::id(),
-                'total' => $subtotal
+                'total'   => $request->total,
+                'bayar'   => $request->bayar,
+                'kembali' => $request->bayar - $request->total,
+                'tanggal' => now(), // Pastikan kolom ini ada di database atau biarkan default
             ]);
 
-            TransactionItem::create([
-                'transaction_id' => $transaction->id,
-                'product_id' => $product->id,
-                'price' => $product->price,
-                'qty' => $qty,
-                'subtotal' => $subtotal
-            ]);
+            foreach ($cart as $id => $details) {
+                // Ambil data produk terbaru untuk cek stok
+                $product = Product::findOrFail($id);
+
+                // Tambahan: Validasi stok sebelum potong (mencegah stok minus)
+                if ($product->stock < $details['qty']) {
+                    throw new \Exception("Stok untuk produk {$product->name} tidak mencukupi!");
+                }
+
+                // Simpan Detail Transaksi
+                TransactionItem::create([
+                    'transaction_id' => $transaction->id,
+                    'product_id'     => $id,
+                    'price'          => $details['price'],
+                    'qty'            => $details['qty'],
+                    'subtotal'       => $details['price'] * $details['qty']
+                ]);
+
+                // Potong Stok Produk secara otomatis
+                $product->decrement('stock', $details['qty']);
+            }
         });
 
-        return redirect()->route('transactions.create')
-            ->with('success', 'Transaksi berhasil disimpan');
+        // 5. Hapus Keranjang setelah berhasil
+        session()->forget('cart');
+
+        return redirect()->route('transactions.index')
+            ->with('success', 'Transaksi berhasil! Kembalian: Rp ' . number_format($request->bayar - $request->total, 0, ',', '.'));
+
+    } catch (\Exception $e) {
+        // Jika ada error (seperti stok habis di tengah proses), transaksi di-rollback otomatis
+        return redirect()->back()->with('error', 'Gagal memproses transaksi: ' . $e->getMessage());
+    }
     }
 
     public function addToCart(Request $request)
     {
-    $request->validate([
-        'product_id' => 'required|exists:products,id',
-        'qty' => 'required|integer|min:1'
-    ]);
-
     $product = Product::findOrFail($request->product_id);
     $cart = session()->get('cart', []);
 
@@ -64,23 +98,23 @@ class TransactionController extends Controller
         return back()->with('error', 'Stok tidak mencukupi');
     }
 
-    // SIMPAN KE CART
     $cart[$product->id] = [
         'name' => $product->name,
         'price' => $product->price,
         'qty' => $totalQty,
+        'unit' => $product->unit, // Tambahkan ini agar satuan tersimpan di keranjang
     ];
 
     session()->put('cart', $cart);
-
-    return back()->with('success', 'Produk ditambahkan ke cart');
+    return back();
     }
 
     public function updateCart(Request $request)
     {
+    // 1. Validasi awal
     $request->validate([
         'product_id' => 'required',
-        'qty' => 'required|integer|min:1'
+        'action' => 'required|in:increase,decrease' // Menerima increase atau decrease
     ]);
 
     $cart = session()->get('cart', []);
@@ -90,18 +124,29 @@ class TransactionController extends Controller
     }
 
     $product = Product::findOrFail($request->product_id);
+    $currentQty = $cart[$request->product_id]['qty'];
 
-    // 🔒 VALIDASI STOK
-    if ($request->qty > $product->stock) {
-        return back()->with('error', 'Qty melebihi stok');
+    // 2. Logika Tambah atau Kurang
+    if ($request->action === 'increase') {
+        // Cek stok sebelum nambah
+        if ($currentQty + 1 > $product->stock) {
+            return back()->with('error', 'Stok tidak mencukupi!');
+        }
+        $cart[$request->product_id]['qty']++;
+    } else {
+        // Logika Kurang
+        if ($currentQty > 1) {
+            $cart[$request->product_id]['qty']--;
+        } else {
+            // Kalau sisa 1 dikurang lagi, hapus dari keranjang
+            unset($cart[$request->product_id]);
+        }
     }
 
-    // UPDATE QTY
-    $cart[$request->product_id]['qty'] = $request->qty;
-
+    // 3. Simpan balik ke session
     session()->put('cart', $cart);
 
-    return back()->with('success', 'Qty berhasil diupdate');
+    return back(); // Refresh halaman dengan data terbaru
     }
 
 
@@ -114,61 +159,66 @@ class TransactionController extends Controller
     return back();
     }
 
-    public function checkout()
-    {
-        $cart = session()->get('cart');
+    // Ubah bagian ini di TransactionController.php
 
-        if (!$cart || count($cart) === 0) {
-            return back()->with('error', 'Cart kosong');
-        }
+public function checkout(Request $request)
+{
+    $cart = session()->get('cart');
 
-        // Variabel untuk menampung ID transaksi agar bisa dipanggil setelah closure
-        $transactionId = DB::transaction(function () use ($cart) {
-            $total = 0;
+    if (!$cart || count($cart) === 0) {
+        return back()->with('error', 'Keranjang belanja masih kosong!');
+    }
 
-            foreach ($cart as $productId => $item) {
-                $product = Product::lockForUpdate()->findOrFail($productId);
-                if ($product->stock < $item['qty']) {
-                    throw new \Exception("Stok {$product->name} tidak cukup");
-                }
-                $total += $product->price * $item['qty'];
-            }
+    // 1. Hitung Total belanja dari session
+    $total = 0;
+    foreach ($cart as $item) {
+        $total += $item['price'] * $item['qty'];
+    }
 
-            $transaction = Transaction::create([
-                'user_id' => Auth::id(),
-                'total' => $total // Pastikan nama kolom di DB 'total' atau 'total_price'
+    // 2. Validasi: Apakah uang yang diinput cukup?
+    if ($request->bayar < $total) {
+        return back()->with('error', 'Uang bayar tidak mencukupi! Kurang Rp ' . number_format($total - $request->bayar));
+    }
+
+    $transactionId = DB::transaction(function () use ($cart, $total, $request) {
+        // 3. Simpan transaksi utama
+        $transaction = Transaction::create([
+            'user_id' => Auth::id(),
+            'total'   => $total,
+            'bayar'   => $request->bayar,
+            'kembali' => $request->bayar - $total, // Hitung otomatis kembalian
+        ]);
+
+        // 4. Simpan detail item & kurangi stok
+        foreach ($cart as $productId => $item) {
+            TransactionItem::create([
+                'transaction_id' => $transaction->id,
+                'product_id'     => $productId,
+                'price'          => $item['price'],
+                'qty'            => $item['qty'],
+                'subtotal'       => $item['price'] * $item['qty']
             ]);
 
-            foreach ($cart as $productId => $item) {
-                $product = Product::findOrFail($productId);
-                
-                // Pastikan relasi di model Transaction bernama 'details' atau 'items'
-                TransactionItem::create([
-                    'transaction_id' => $transaction->id,
-                    'product_id' => $productId,
-                    'price' => $product->price,
-                    'qty' => $item['qty'],
-                    'subtotal' => $product->price * $item['qty']
-                ]);
+            Product::find($productId)->decrement('stock', $item['qty']);
+        }
+        
+        return $transaction->id;
+    });
 
-                $product->decrement('stock', $item['qty']);
-            }
-            
-            return $transaction->id;
-        });
+    session()->forget('cart');
 
-        session()->forget('cart');
-
-        // REKOMENDASI: Langsung arahkan ke nota setelah bayar
-        return redirect()->route('transactions.show', $transactionId)
-            ->with('success', 'Transaksi berhasil!');
-    }
+    return redirect()->route('transactions.show', $transactionId)
+                     ->with('success', 'Pembayaran Berhasil!');
+}
 
     public function index()
     {
-        
-        $transactions = Transaction::with('items.product')->latest()->get();
-        return view('transactions.index', compact('transactions'));
+    // Mengambil 10 transaksi per halaman
+    $transactions = Transaction::with(['user', 'items.product'])
+                    ->latest()
+                    ->paginate(10); 
+
+    return view('transactions.index', compact('transactions'));
     }
 
     public function show($id)
@@ -178,5 +228,62 @@ class TransactionController extends Controller
     }
 
 
+    public function export()
+    {
+    $transactions = Transaction::with('user')->orderBy('created_at', 'desc')->get();
+    
+    $fileName = 'laporan-transaksi-' . date('Y-m-d') . '.csv';
+    
+    $headers = [
+        "Content-type"        => "text/csv",
+        "Content-Disposition" => "attachment; filename=$fileName",
+        "Pragma"              => "no-cache",
+        "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+        "Expires"             => "0"
+    ];
+
+    $columns = ['No. Nota', 'Tanggal', 'Waktu', 'Kasir', 'Total Belanja'];
+
+    $callback = function() use($transactions, $columns) {
+        $file = fopen('php://output', 'w');
+        fputcsv($file, $columns);
+
+        foreach ($transactions as $trx) {
+            fputcsv($file, [
+                '#TRX-' . $trx->id,
+                $trx->created_at->format('d M Y'),
+                $trx->created_at->format('H:i') . ' WIB',
+                $trx->user->name ?? 'Admin',
+                $trx->total
+            ]);
+        }
+        fclose($file);
+    };
+
+    return response()->stream($callback, 200, $headers);
+    }
+
+    public function clearCart()
+    {
+    session()->forget('cart');
+    return redirect()->back()->with('success', 'Keranjang belanja dikosongkan.');
+    }
+
+
+    public function reset()
+    {
+    try {
+        DB::transaction(function () {
+            // Hapus semua detail transaksi dulu (jika tidak pakai cascade delete di DB)
+            DB::table('transaction_items')->delete();
+            // Hapus semua header transaksi
+            DB::table('transactions')->delete();
+        });
+
+        return redirect()->back()->with('success', 'Semua riwayat laporan berhasil dibersihkan!');
+    } catch (\Exception $e) {
+        return redirect()->back()->with('error', 'Gagal mereset laporan: ' . $e->getMessage());
+    }
+    }
 
 }

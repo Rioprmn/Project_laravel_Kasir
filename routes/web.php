@@ -3,43 +3,47 @@
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\DashboardController;
+// TAMBAHKAN INI jika kamu punya CartController terpisah
+// use App\Http\Controllers\CartController; 
 use Illuminate\Support\Facades\Route;
 
-// 1. Public / Redirect Routes
 Route::get('/', fn() => redirect()->route('dashboard'));
 
-// 2. Authenticated Routes
 Route::middleware(['auth'])->group(function () {
     
-    // Dashboard
-    Route::get('/dashboard', fn() => view('dashboard'))->name('dashboard');
+    // DASHBOARD
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Profile Management
+    // PROFILE
     Route::controller(ProfileController::class)->group(function () {
         Route::get('/profile', 'edit')->name('profile.edit');
         Route::patch('/profile', 'update')->name('profile.update');
         Route::delete('/profile', 'destroy')->name('profile.destroy');
     });
 
-    // Product Management (CRUD) - Menggunakan Resource agar lebih singkat
+    // PRODUCTS (CRUD)
     Route::resource('products', ProductController::class);
 
-    // Kasir & Transaction Management
-    Route::prefix('transactions')->group(function () {
-        Route::get('/create', [TransactionController::class, 'create'])->name('transactions.create');
-        Route::post('/checkout', [TransactionController::class, 'checkout'])->name('transactions.checkout');
-        // Tambahkan di dalam Route::prefix('transactions')
-        Route::get('/', [TransactionController::class, 'index'])->name('transactions.index');
-        Route::get('/{id}', [TransactionController::class, 'show'])->name('transactions.show');
+    // TRANSACTIONS & EXPORT
+    Route::prefix('transactions')->name('transactions.')->group(function () {
+        Route::get('/export', [TransactionController::class, 'export'])->name('export'); // Pindahkan ke sini agar rapi
+        Route::get('/', [TransactionController::class, 'index'])->name('index');
+        Route::get('/create', [TransactionController::class, 'create'])->name('create');
+        Route::delete('/reset', [TransactionController::class, 'reset'])->name('reset');
+        Route::post('/store', [TransactionController::class, 'store'])->name('store');
+        Route::get('/{id}', [TransactionController::class, 'show'])->name('show');
     });
 
-    // Cart Management
+    // CART (Digabung ke TransactionController agar simpel)
     Route::prefix('cart')->name('cart.')->group(function () {
         Route::post('/add', [TransactionController::class, 'addToCart'])->name('add');
         Route::post('/remove', [TransactionController::class, 'removeFromCart'])->name('remove');
         Route::post('/update', [TransactionController::class, 'updateCart'])->name('update');
+        
+        // Perbaikan: Arahkan ke TransactionController saja jika tidak ada CartController
+        Route::post('/clear', [TransactionController::class, 'clearCart'])->name('clear');
     });
-
 });
 
 require __DIR__.'/auth.php';

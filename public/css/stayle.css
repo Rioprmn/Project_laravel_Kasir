@@ -1,0 +1,344 @@
+/* =========================================
+1. CORE VARIABLES & RESET 
+=========================================
+*/
+:root {
+    --primary: #10b981;
+    --primary-dark: #059669;
+    --primary-grad: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    --bg-light: #f0fdf4;
+    --sidebar-dark: #064e3b;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --danger: #ef4444;
+    --white: #ffffff;
+    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-main);
+    overflow-x: hidden;
+    line-height: 1.5;
+}
+
+/* =========================================
+2. SIDEBAR NAVIGATION 
+=========================================
+*/
+.sidebar {
+    width: 260px;
+    height: calc(100vh - 40px);
+    background: var(--sidebar-dark);
+    position: fixed;
+    left: 20px;
+    top: 20px;
+    border-radius: 24px;
+    color: white;
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column; /* Membuat isi sidebar vertikal */
+}
+
+.sidebar-brand {
+    padding: 30px;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #34d399;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 20px 0;
+    margin: 0;
+    flex-grow: 1; /* Mengambil sisa ruang agar footer terdorong ke bawah */
+    overflow-y: auto;
+}
+
+.sidebar-menu li a {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 14px 25px;
+    color: #a7f3d0;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin: 4px 15px;
+    border-radius: 14px;
+    font-weight: 600;
+}
+
+.sidebar-menu li a:hover, 
+.sidebar-menu li a.active {
+    background: var(--primary-grad);
+    color: white;
+    transform: translateX(5px);
+    box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
+}
+
+.sidebar-footer {
+    padding: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* =========================================
+3. MAIN CONTENT AREA 
+=========================================
+*/
+.main-content {
+    margin-left: 300px; /* Sidebar width + gap */
+    padding: 40px 40px 40px 0;
+    min-height: 100vh;
+    animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================================
+4. COMPONENTS (CARDS, BUTTONS, FORMS) 
+=========================================
+*/
+.card {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 25px;
+    border: none;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+    margin-bottom: 25px;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 25px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+    border: none;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: var(--primary-grad);
+    color: white;
+    box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+}
+
+.btn-primary:hover {
+    transform: scale(1.02);
+    box-shadow: 0 10px 15px rgba(16, 185, 129, 0.4);
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 15px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    font-family: inherit;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+}
+
+/* =========================================
+5. TABLES 
+=========================================
+*/
+.table-custom {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+}
+
+.table-custom thead th {
+    padding: 15px 20px;
+    color: var(--text-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    border: none;
+}
+
+.table-custom tbody tr {
+    background: white;
+    transition: all 0.3s;
+}
+
+.table-custom tbody tr:hover {
+    transform: scale(1.005);
+}
+
+.table-custom td {
+    padding: 18px 20px;
+    border: none;
+    background: white;
+}
+
+.table-custom td:first-child { border-radius: 15px 0 0 15px; }
+.table-custom td:last-child { border-radius: 0 15px 15px 0; }
+
+/* =========================================
+6. ACTION BUTTONS & BADGES 
+=========================================
+*/
+.btn-action {
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-action.edit { background: #f1f5f9; color: var(--text-main); }
+.btn-action.delete { background: #fef2f2; color: var(--danger); }
+
+.btn-action:hover { transform: translateY(-3px); }
+
+.badge-stock {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.badge-stock.safe { background: #ecfdf5; color: #059669; }
+.badge-stock.low { background: #fff1f2; color: #e11d48; }
+
+/* =========================================
+7. LOGOUT BUTTON 
+=========================================
+*/
+.btn-logout {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    padding: 12px;
+    width: 100%;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 700;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+}
+
+.btn-logout:hover {
+    background: var(--danger);
+    color: white;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+}
+
+
+
+.badge-trx {
+    background: #f0fdf4;
+    color: #16a34a;
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    border: 1px solid #dcfce7;
+}
+
+.btn-detail-modern {
+    background: white;
+    color: #2563eb;
+    border: 1px solid #e2e8f0;
+    padding: 6px 15px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.btn-detail-modern:hover {
+    background: #f8fafc;
+    border-color: #2563eb;
+}
+
+
+
+/* RESPONSIVE ADJUSTMENTS */
+@media (max-width: 768px) {
+    /* Header Halaman (Judul & Tombol Tambah) */
+    .product-header, .header-page {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 15px !important;
+    }
+
+    .product-header a, .btn-primary {
+        width: 100%; /* Tombol jadi lebar penuh di HP */
+        justify-content: center;
+    }
+
+    /* Kartu Stats di Dashboard */
+    .dashboard-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Tabel - Sembunyikan kolom yang kurang penting di HP (opsional) */
+    .table-custom th:nth-child(3),
+    .table-custom td:nth-child(3) {
+        /* Misal sembunyikan kolom harga di layar sangat kecil jika sempit */
+    }
+    
+    .card {
+        padding: 15px;
+        border-radius: 15px;
+    }
+}
+
+
+
+/* Khusus Layar HP / Tablet */
+@media (max-width: 992px) {
+    .main-content {
+        margin-left: 0 !important; /* Hilangkan jarak kiri sidebar */
+        padding: 20px !important;   /* Beri jarak rata kiri kanan */
+    }
+
+    .sidebar {
+        display: none; /* Sementara kita sembunyikan dulu di HP biar nggak ganggu */
+    }
+}
