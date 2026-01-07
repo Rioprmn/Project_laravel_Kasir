@@ -71,7 +71,7 @@ Bash
 
 # Generate key aplikasi
 php artisan key:generate
-```bash
+
 
 # Migrasi tabel dan data awal
 php artisan migrate --seed
