@@ -59,3 +59,27 @@ Route::middleware(['auth'])->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+Route::get('/debug-db', function () {
+    try {
+        $pdo = \DB::connection()->getPdo();
+        $dbName = \DB::connection()->getDatabaseName();
+        $tables = \DB::select('SHOW TABLES');
+        
+        return response()->json([
+            'status' => 'connected',
+            'driver' => config('database.default'),
+            'database_name_in_config' => config('database.connections.mysql.database'),
+            'actual_database_name' => $dbName,
+            'host' => config('database.connections.mysql.host'),
+            'tables_count' => count($tables),
+            'tables_list' => array_map(function($t) { return array_values((array)$t)[0]; }, $tables),
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'config_host' => config('database.connections.mysql.host'),
+        ], 500);
+    }
+});
